@@ -1,9 +1,12 @@
-const { MongoClient, ServerApiVersion } = require('mongodb');
-const express = require('express')
+const express = require('express');
 const cors = require('cors');
-require ('dotenv').config();
-const app = express()
-const port = process.env.Port || 5000;
+const jwt = require('jsonwebtoken');
+const app = express();
+const port = process.env.PORT || 5000;
+const { MongoClient, ServerApiVersion } = require('mongodb');
+const ObjectId = require('mongodb').ObjectId;
+require('dotenv').config();
+
 
 
 app.use(cors());
@@ -18,13 +21,30 @@ async function run (){
 
     try{
         await client.connect();
-        const serviceCollection = client.db('car-parts-manufacturers').collection('products');
+        const productsCollection = client.db('car-parts-manufacturers').collection('products');
+        const ordersCollection = client.db('car-parts-manufacturers').collection('orders');
 
+        // Get Product Api data //
         app.get('/products', async(req, res) => {
             const query = {};
-            const cursor = serviceCollection.find(query);
+            const cursor = productsCollection.find(query);
             const services = await cursor.toArray();
             res.send(services);
+        })
+
+        // Get to Find Api id //
+        app.get('/products/:id', async (req, res) => {
+            const id =  req.params.id;
+            const query = {_id: ObjectId(id)};
+            console.log(query);
+            const result = await productsCollection.findOne(query);
+            res.send(result);
+        });
+
+        app.post('/orders', async (req, res) => {
+            const orders = req.body;
+            const result = await ordersCollection.insertOne(orders);
+            return res.send({success: true, result});
         })
 
     }
