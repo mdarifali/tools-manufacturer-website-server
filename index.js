@@ -51,6 +51,12 @@ async function run() {
             res.send(services);
         })
 
+        // Get Users Api data //
+        app.get('/user', async (req, res) => {
+            const users = await userCollection.find().toArray();
+            res.send(users);
+        })
+
         // User singup insert Api data //
         app.put('/user/:email', async (req, res) => {
             const email = req.params.email;
@@ -82,7 +88,7 @@ async function run() {
         });
 
 
-        app.get('/orders', async (req, res) => {
+        app.get('/orders', verifyJWT, async (req, res) => {
             const email = req.query.email;
             const query = { email: email };
             const cursor = ordersCollection.find(query);
