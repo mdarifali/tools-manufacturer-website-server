@@ -17,9 +17,27 @@ app.use(express.json())
 const uri = `mongodb+srv://${process.env.DB_USER_NAME}:${process.env.DB_USER_PASS}@cluster0.eosns.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
-async function run (){
+function verifyJWT (req, res, next) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).send({ message: 'UnAuthorized access' });
+    }
+    const token = authHeader.split(' ')[1];
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
+        if (err) {
+            return res.status(403).send({ message: 'Forbidden access' })
+        }
+        req.decoded = decoded;
+        next();
+    });
+}
 
-    try{
+
+
+
+async function run() {
+
+    try {
         await client.connect();
         const productsCollection = client.db('car-parts-manufacturers').collection('products');
         const ordersCollection = client.db('car-parts-manufacturers').collection('orders');
@@ -37,19 +55,20 @@ async function run (){
         app.put('/user/:email', async (req, res) => {
             const email = req.params.email;
             const user = req.body;
-            const filter = {email : email};
-            const options = {upsert: true};
-            const updatedData ={
+            const filter = { email: email };
+            const options = { upsert: true };
+            const updatedData = {
                 $set: user,
             };
             const result = await userCollection.updateOne(filter, updatedData, options);
-            res.send(result);
+            const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1d' })
+            res.send({ result, token });
         })
 
         // Get to Find Api id //
         app.get('/products/:id', async (req, res) => {
-            const id =  req.params.id;
-            const query = {_id: ObjectId(id)};
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
             console.log(query);
             const result = await productsCollection.findOne(query);
             res.send(result);
@@ -59,20 +78,20 @@ async function run (){
         app.post('/orders', async (req, res) => {
             const orders = req.body;
             const result = await ordersCollection.insertOne(orders);
-            return res.send({success: true, result});
+            return res.send({ success: true, result });
         });
 
 
         app.get('/orders', async (req, res) => {
-            const email = req.query.email; 
-            const query = {  email: email };
+            const email = req.query.email;
+            const query = { email: email };
             const cursor = ordersCollection.find(query);
             const result = await cursor.toArray();
             res.send(result);
         });
 
     }
-    finally{
+    finally {
         console.log('MongoDB is Connected');
     }
 }
