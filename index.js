@@ -71,8 +71,16 @@ async function run() {
             res.send(users);
         });
 
+        // Get Admin Api data //
+        app.get('/admin/:email', async (req, res) => {
+            const email = req.params.email;
+            const user = await userCollection.findOne({email: email});
+            const isAdmin = user.role === 'admin'
+            res.send({admin: isAdmin});
+        });
+
         // User admin Api data //
-        app.put('/user/admin/:email', async (req, res) => {
+        app.put('/user/admin/:email', verifyJWT, async (req, res) => {
             const email = req.params.email;
             const filter = { email: email };
             const updatedData = {
