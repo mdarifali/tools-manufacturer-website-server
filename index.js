@@ -42,6 +42,7 @@ async function run() {
         const productsCollection = client.db('car-parts-manufacturers').collection('products');
         const ordersCollection = client.db('car-parts-manufacturers').collection('orders');
         const userCollection = client.db('car-parts-manufacturers').collection('user');
+        const reviewsCollection = client.db('car-parts-manufacturers').collection('reviews');
 
         // Get Product Api data //
         app.get('/products', async (req, res) => {
@@ -51,8 +52,15 @@ async function run() {
             res.send(services);
         })
 
+        //  Insert Reviews api //
+        app.post('/reviews', async (req, res) => {
+            const review = req.body;
+            const result = await reviewsCollection.insertOne(review);
+            return res.send({ success: true, result });
+        });
+
         // Get Users Api data //
-        app.get('/user', async (req, res) => {
+        app.get('/user', verifyJWT, async (req, res) => {
             const users = await userCollection.find().toArray();
             res.send(users);
         })
@@ -71,7 +79,7 @@ async function run() {
             res.send({ result, token });
         })
 
-        // Get to Find Api id //
+        // Products id Find Api //
         app.get('/products/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
@@ -80,14 +88,14 @@ async function run() {
             res.send(result);
         });
 
-        // Insert order api //
+        // Insert order api data//
         app.post('/orders', async (req, res) => {
             const orders = req.body;
             const result = await ordersCollection.insertOne(orders);
             return res.send({ success: true, result });
         });
 
-
+        // GEt order api  data//
         app.get('/orders', verifyJWT, async (req, res) => {
             const email = req.query.email;
             const query = { email: email };
