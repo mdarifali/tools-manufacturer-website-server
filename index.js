@@ -69,7 +69,18 @@ async function run() {
         app.get('/user', verifyJWT, async (req, res) => {
             const users = await userCollection.find().toArray();
             res.send(users);
-        })
+        });
+
+        // User admin Api data //
+        app.put('/user/admin/:email', async (req, res) => {
+            const email = req.params.email;
+            const filter = { email: email };
+            const updatedData = {
+                $set: {role: 'admin'},
+            };
+            const result = await userCollection.updateOne(filter, updatedData);
+            res.send({ result });
+        });
 
         // User singup insert Api data //
         app.put('/user/:email', async (req, res) => {
@@ -83,7 +94,7 @@ async function run() {
             const result = await userCollection.updateOne(filter, updatedData, options);
             const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1d' })
             res.send({ result, token });
-        })
+        });
 
         // Products id Find Api //
         app.get('/products/:id', async (req, res) => {
