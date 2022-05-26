@@ -60,6 +60,12 @@ async function run() {
         });
 
         // Get Users Api data //
+        app.get('/reviews',verifyJWT, async (req, res) => {
+            const review = await reviewsCollection.find().toArray();
+            res.send(review);
+        })
+
+        // Get Users Api data //
         app.get('/user', verifyJWT, async (req, res) => {
             const users = await userCollection.find().toArray();
             res.send(users);
