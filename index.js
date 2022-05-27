@@ -44,13 +44,20 @@ async function run() {
         const userCollection = client.db('car-parts-manufacturers').collection('user');
         const reviewsCollection = client.db('car-parts-manufacturers').collection('reviews');
 
+        // Insert Products Api data //
+        app.post('/products', async (req, res) => {
+            const products = req.body;
+            const result = await productsCollection.insertOne(products);
+            return res.send({ success: true, result });
+        })
+
         // Get Product Api data //
         app.get('/products', async (req, res) => {
             const query = {};
             const cursor = productsCollection.find(query);
             const services = await cursor.toArray();
             res.send(services);
-        })
+        });
 
         //  Insert Reviews api //
         app.post('/reviews', async (req, res) => {
