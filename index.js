@@ -43,6 +43,23 @@ async function run() {
         const ordersCollection = client.db('car-parts-manufacturers').collection('orders');
         const userCollection = client.db('car-parts-manufacturers').collection('user');
         const reviewsCollection = client.db('car-parts-manufacturers').collection('reviews');
+        const paymentCollection = client.db('car-parts-manufacturers').collection('payment');
+        const profileCollection = client.db('car-parts-manufacturers').collection('profile');
+
+        //  Insert Profile api //
+        app.post('/profile', async (req, res) => {
+            const profile = req.body;
+            const result = await profileCollection.insertOne(profile);
+            return res.send({ success: true, result });
+        });
+
+        app.get('/profile', async (req, res) => {
+            const email = req.query.email;
+            const query = { email: email };
+            const user = await profileCollection.findOne(query);
+            res.send(user);
+        });
+
 
         // Payent Api data //
         app.post('/create-payment-intent',verifyJWT, async(req, res) =>{
@@ -136,7 +153,6 @@ async function run() {
         app.get('/products/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
-            console.log(query);
             const result = await productsCollection.findOne(query);
             res.send(result);
         });
@@ -146,6 +162,14 @@ async function run() {
             const orders = req.body;
             const result = await ordersCollection.insertOne(orders);
             return res.send({ success: true, result });
+        });
+        
+        // delete order api  data//
+        app.delete('/orders/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = {_id: ObjectId(id)};
+            const result = await ordersCollection.deleteOne(query);
+            res.send(result);
         });
 
         // GEt order api  data//
@@ -160,10 +184,25 @@ async function run() {
         app.get('/orders/:id', verifyJWT, async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
-            console.log(query);
             const result = await ordersCollection.findOne(query);
             res.send(result);
         });
+
+        app.patch('/orders/:id', verifyJWT, async(req, res) =>{
+            const id  = req.params.id;
+            const payment = req.body;
+            const filter = {_id: ObjectId(id)};
+            const updatedDoc = {
+              $set: {
+                paid: true,
+                transactionId: payment.transactionId
+              }
+            }
+      
+            const result = await paymentCollection.insertOne(payment);
+            const updatedBooking = await ordersCollection.updateOne(filter, updatedDoc);
+            res.send(updatedBooking);
+          })
 
     }
     finally {
