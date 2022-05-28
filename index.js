@@ -59,6 +59,14 @@ async function run() {
             res.send(services);
         });
 
+        // Delete Api data //
+        app.delete('/products/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = {_id: ObjectId(id)};
+            const result = await productsCollection.deleteOne(query);
+            res.send(result);
+        });
+
         //  Insert Reviews api //
         app.post('/reviews', async (req, res) => {
             const review = req.body;
