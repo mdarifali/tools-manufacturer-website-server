@@ -7,7 +7,7 @@ const { MongoClient, ServerApiVersion } = require('mongodb');
 const ObjectId = require('mongodb').ObjectId;
 require('dotenv').config();
 
-
+const stripe = require('stripe')(process.env.STRIPE_KEY);
 
 app.use(cors());
 app.use(express.json())
@@ -44,6 +44,19 @@ async function run() {
         const userCollection = client.db('car-parts-manufacturers').collection('user');
         const reviewsCollection = client.db('car-parts-manufacturers').collection('reviews');
 
+        // Payent Api data //
+        app.post('/create-payment-intent',verifyJWT, async(req, res) =>{
+            const service = req.body;
+            const price = service.price;
+            const amount = price*100;
+            const paymentIntent = await stripe.paymentIntents.create({
+              amount : amount,
+              currency: 'usd',
+              payment_method_types:['card']
+            });
+            res.send({clientSecret: paymentIntent.client_secret})
+          });
+
         // Insert Products Api data //
         app.post('/products', async (req, res) => {
             const products = req.body;
@@ -75,7 +88,7 @@ async function run() {
         });
 
         // Get Users Api data //
-        app.get('/reviews',verifyJWT, async (req, res) => {
+        app.get('/reviews',  async (req, res) => {
             const review = await reviewsCollection.find().toArray();
             res.send(review);
         })
@@ -90,7 +103,7 @@ async function run() {
         app.get('/admin/:email', async (req, res) => {
             const email = req.params.email;
             const user = await userCollection.findOne({email: email});
-            const isAdmin = user.role === 'admin'
+            const isAdmin = user.role === 'admin';
             res.send({admin: isAdmin});
         });
 
@@ -136,11 +149,19 @@ async function run() {
         });
 
         // GEt order api  data//
-        app.get('/orders', verifyJWT, async (req, res) => {
+        app.get('/orders', async (req, res) => {
             const email = req.query.email;
             const query = { email: email };
             const cursor = ordersCollection.find(query);
             const result = await cursor.toArray();
+            res.send(result);
+        });
+
+        app.get('/orders/:id', verifyJWT, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            console.log(query);
+            const result = await ordersCollection.findOne(query);
             res.send(result);
         });
 
