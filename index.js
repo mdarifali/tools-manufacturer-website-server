@@ -53,13 +53,14 @@ async function run() {
             return res.send({ success: true, result });
         });
 
-        app.get('/profile', async (req, res) => {
+        // Get Product Api data //
+        app.get('/profile',  async (req, res) => {
             const email = req.query.email;
             const query = { email: email };
-            const user = await profileCollection.findOne(query);
-            res.send(user);
+            const cursor = profileCollection.find(query);
+            const result = await cursor.toArray();
+            res.send(result);
         });
-
 
         // Payent Api data //
         app.post('/create-payment-intent',verifyJWT, async(req, res) =>{
@@ -108,7 +109,7 @@ async function run() {
         app.get('/reviews',  async (req, res) => {
             const review = await reviewsCollection.find().toArray();
             res.send(review);
-        })
+        });
 
         // Get Users Api data //
         app.get('/user', verifyJWT, async (req, res) => {
@@ -170,6 +171,12 @@ async function run() {
             const query = {_id: ObjectId(id)};
             const result = await ordersCollection.deleteOne(query);
             res.send(result);
+        });
+
+        // GEt all order api  data//
+        app.get('/orders', verifyJWT, async (req, res) => {
+            const order = await ordersCollection.find().toArray();
+            res.send(order);
         });
 
         // GEt order api  data//
