@@ -46,6 +46,7 @@ async function run() {
         const paymentCollection = client.db('car-parts-manufacturers').collection('payment');
         const profileCollection = client.db('car-parts-manufacturers').collection('profile');
 
+        
         //  Insert Profile api //
         app.post('/profile', async (req, res) => {
             const profile = req.body;
